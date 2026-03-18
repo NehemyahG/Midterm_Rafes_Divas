@@ -683,6 +683,33 @@ plt.savefig(OUTPUT_DIR / "model_performance_overview.png")
 plt.close()
 
 # ============================================================
+# Confidence intervals for ROC-AUC using bootstrapping for both models
+# ============================================================
+
+def bootstrap_auc(y_true, y_scores, n_bootstraps=1000, random_state=42):
+    rng = np.random.RandomState(random_state)
+    bootstrapped_scores = []
+
+    for i in range(n_bootstraps):
+        indices = rng.randint(0, len(y_true), len(y_true))
+        if len(np.unique(y_true[indices])) < 2:
+            continue
+        score = roc_auc_score(y_true[indices], y_scores[indices])
+        bootstrapped_scores.append(score)
+
+    sorted_scores = np.sort(bootstrapped_scores)
+    lower_bound = sorted_scores[int(0.025 * len(sorted_scores))]
+    upper_bound = sorted_scores[int(0.975 * len(sorted_scores))]
+    return lower_bound, upper_bound
+
+log_auc_ci = bootstrap_auc(y_test.values, y_prob_log)
+xgb_auc_ci = bootstrap_auc(y_test.values, y_prob_xgb)
+
+print(f"\nLogistic Regression ROC-AUC 95% CI: [{log_auc_ci[0]:.4f}, {log_auc_ci[1]:.4f}]")
+print(f"XGBoost ROC-AUC 95% CI: [{xgb_auc_ci[0]:.4f}, {xgb_auc_ci[1]:.4f}]")    
+    
+
+# ============================================================
 # SUMMARY
 # ============================================================
 print("\n" + "=" * 60)
