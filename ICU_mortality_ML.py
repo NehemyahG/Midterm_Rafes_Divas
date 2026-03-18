@@ -438,15 +438,16 @@ print("Logistic Regression CV PR-AUC:", log_cv_pr)
 print("Mean PR-AUC: {:.4f} ± {:.4f}".format(log_cv_pr.mean(), log_cv_pr.std()))
 
 # ============================================================
-# Importance plot for Logistic Regression (using absolute value of coefficients)
+# Importance plot for Logistic Regression (using absolute value of coefficients) .sort_values(by="importance", ascending=False)
 # ============================================================
 log_reg_model = log_pipeline.named_steps["model"]
-log_reg_importance = log_reg_model.coef_[0]
-log_reg_feature_names = X_log_train.columns.tolist()
+log_reg_importance = pd.DataFrame({
+    "feature": X_log_train.columns,
+    "importance": log_reg_model.coef_[0]
+}).sort_values(by="importance", ascending=False)
 
 plt.figure(figsize=(8, 6))
-plt.barh(range(len(log_reg_importance)), np.abs(log_reg_importance), align="center")
-plt.yticks(range(len(log_reg_importance)), log_reg_feature_names)
+plt.barh(log_reg_importance["feature"], np.abs(log_reg_importance["importance"]), align="center")
 plt.xlabel("Absolute Coefficient Value")
 plt.title("Logistic Regression Feature Importance")
 plt.tight_layout()
@@ -707,7 +708,7 @@ xgb_auc_ci = bootstrap_auc(y_test.values, y_prob_xgb)
 
 print(f"\nLogistic Regression ROC-AUC 95% CI: [{log_auc_ci[0]:.4f}, {log_auc_ci[1]:.4f}]")
 print(f"XGBoost ROC-AUC 95% CI: [{xgb_auc_ci[0]:.4f}, {xgb_auc_ci[1]:.4f}]")    
-    
+
 
 # ============================================================
 # SUMMARY
